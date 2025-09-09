@@ -140,6 +140,13 @@ document.addEventListener("DOMContentLoaded", () => {
     gerarTabela(currentMonday);
   });
 
+  document.getElementById("dataEscolhida").addEventListener("change", (e) => {
+  const dataEscolhida = new Date(e.target.value);
+  currentMonday = getMonday(dataEscolhida);
+  gerarTabela(currentMonday);
+});
+
+
   // Modal (responsável)
   btnFechar.addEventListener("click", () => modal.style.display = "none");
   btnCancelar.addEventListener("click", () => modal.style.display = "none");

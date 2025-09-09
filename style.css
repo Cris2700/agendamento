@@ -157,4 +157,78 @@ header {
 .cancelar:hover {
   background: #999;
 }
+.data-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.data-selector label {
+  font-weight: bold;
+  color: #003366; 
+  font-size: 1rem;
+}
+
+.data-selector input[type="date"] {
+  padding: 8px 12px;
+  border: 2px solid #007BFF;
+  border-radius: 8px;
+  background-color: #f0f8ff; 
+  color: #003366;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.data-selector input[type="date"]:hover {
+  border-color: #0056b3;
+  background-color: #e6f2ff;
+}
+
+.data-selector input[type="date"]:focus {
+  outline: none;
+  border-color: #004080;
+  box-shadow: 0 0 5px rgba(0, 64, 128, 0.5);
+}
+#agendaContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* esconde as tabelas que deslizam */
+  height: 100%;
+}
+
+.tabela-semana {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.tabela-semana.entrando-direita {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.tabela-semana.entrando-esquerda {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.tabela-semana.visivel {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.tabela-semana.saindo-esquerda {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.tabela-semana.saindo-direita {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+
 
