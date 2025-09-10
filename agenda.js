@@ -93,32 +93,16 @@ document.addEventListener("DOMContentLoaded", () => {
               campoData.textContent = td.dataset.data;
               campoHora.textContent = td.dataset.hora;
               modal.style.display = "flex";
-            } else if (modoAtual === "dentista") {
-              // Dentista bloqueia horário
-              td.classList.remove("disponivel");
-              td.classList.add("ocupado");
-              agenda[chave] = "ocupado"; // salva no estado
-              td.textContent = td.dataset.hora;
-              alert("Dentista marcou este horário como OCUPADO");
-            }
-          } else if (td.classList.contains("ocupado")) {
-            if (modoAtual === "dentista") {
-              // Dentista libera horário
-              td.classList.remove("ocupado");
-              td.classList.add("disponivel");
-              agenda[chave] = "disponivel"; // salva no estado
-              td.textContent = td.dataset.hora;
-              alert("Dentista liberou este horário novamente!");
-            }
-          } else {
+            } 
+          }  else {
             if (modoAtual === "dentista") {
               // Criar disponibilidade
               td.classList.add("disponivel");
               agenda[chave] = "disponivel"; // salva no estado
               td.textContent = td.dataset.hora;
-              alert("Dentista criou novo horário disponível!");
+              showMessage("Dentista criou novo horário disponível!");
             } else {
-              alert("Esse horário ainda não foi liberado pelo dentista.");
+              showMessage("Esse horário ainda não foi liberado pelo dentista.");
             }
           }
         });
@@ -159,9 +143,36 @@ document.addEventListener("DOMContentLoaded", () => {
       agenda[chave] = "ocupado"; // salva no estado
 
       modal.style.display = "none";
-      alert("Consulta confirmada!");
+      showMessage("Consulta confirmada!");
     }
   });
+  function showMessage(titulo, texto, tipo = "aviso") {
+  const modal = document.getElementById("messageModal");
+  const title = document.getElementById("messageTitle");
+  const text = document.getElementById("messageText");
+
+  // aplica título e texto
+  title.textContent = titulo;
+  text.textContent = texto;
+
+  // remove classes antigas e adiciona a nova
+  modal.classList.remove("sucesso", "erro", "aviso");
+  modal.classList.add(tipo);
+
+  modal.style.display = "flex";
+
+  // botão fechar e ok
+  modal.querySelector(".close").onclick = () => modal.style.display = "none";
+  modal.querySelector(".ok").onclick = () => modal.style.display = "none";
+
+  // fechar clicando fora
+  window.onclick = (event) => {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  };
+}
+
 
   // Primeira renderização
   gerarTabela(currentMonday);

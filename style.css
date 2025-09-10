@@ -124,6 +124,25 @@ header {
   margin: 0.5rem 0;
 }
 
+.messageTitle{
+  margin-bottom: 1rem;
+  color: #004080;
+}
+.messageText{
+  margin: 0.5rem 0;
+}
+#messageModal .modal-content .btn{
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #0066cc;
+  color: white;
+}
+#messageModal .modal-content .btn:hover {
+  background-color: #084a91;
+}
 .close {
   position: absolute;
   top: 10px;
