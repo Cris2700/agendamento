@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
               td.classList.add("disponivel");
               agenda[chave] = "disponivel"; // salva no estado
               td.textContent = td.dataset.hora;
-              showMessage("Dentista criou novo horário disponível!");
+              showMessage("Horário disponibilizado!");
             } else {
               showMessage("Esse horário ainda não foi liberado pelo dentista.");
             }
