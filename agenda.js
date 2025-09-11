@@ -9,10 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnFechar = document.querySelector(".close");
   const btnConfirmar = document.querySelector(".confirmar");
   const btnCancelar = document.querySelector(".cancelar");
-  const campoDentista = document.getElementById("modal-dentista");
-  const campoLocal = document.getElementById("modal-local");
   const campoData = document.getElementById("modal-data");
   const campoHora = document.getElementById("modal-hora");
+  const selectDentista = document.getElementById("dentistaSelect");
+  const campoLocal = document.getElementById("modal-local");
 
   let slotSelecionado = null;
 
@@ -26,6 +26,13 @@ document.addEventListener("DOMContentLoaded", () => {
     modoAtual = "dentista";
     alert("Agora você está no modo DENTISTA");
   });
+
+  // Lista de dentistas (simulação)
+  const dentistas = [
+    { id: 1, nome: "Dr. João", local: "Clínica ASBI - Centro" },
+    { id: 2, nome: "Dra. Maria", local: "Clínica ASBI - Sul" },
+    { id: 3, nome: "Dr. Pedro", local: "Clínica ASBI - Norte" }
+  ];
 
   // Objeto para guardar os horários
   let agenda = {};
@@ -69,41 +76,56 @@ document.addEventListener("DOMContentLoaded", () => {
         const td = document.createElement("td");
 
         // Dados do slot
-        td.dataset.dentista = "Dr. João";
-        td.dataset.local = "Clínica ASBI - Centro";
         td.dataset.data = dia.toLocaleDateString("pt-BR");
         td.dataset.hora = `${hora}:00`;
 
-        const chave = `${td.dataset.data}-${td.dataset.hora}`;
+        const chaveBase = td.dataset.data + "-" + td.dataset.hora;
 
-        // Verifica se já existe no agenda
-        if (agenda[chave]) {
-          td.classList.add(agenda[chave]);
+        // Se já tiver status no agenda, aplica classe
+        if (agenda[chaveBase]) {
+          td.classList.add("disponivel");
           td.textContent = td.dataset.hora;
         }
 
         // Clique em cada célula
         td.addEventListener("click", () => {
-          if (td.classList.contains("disponivel")) {
-            if (modoAtual === "responsavel") {
-              // Responsável agenda consulta
+          if (modoAtual === "responsavel") {
+            if (td.classList.contains("disponivel")) {
+              // Modal abre apenas se o horário estiver liberado
               slotSelecionado = td;
-              campoDentista.textContent = td.dataset.dentista;
-              campoLocal.textContent = td.dataset.local;
               campoData.textContent = td.dataset.data;
               campoHora.textContent = td.dataset.hora;
+
+              // Popula dropdown com dentistas disponíveis
+              selectDentista.innerHTML = "";
+              dentistas.forEach(d => {
+                const option = document.createElement("option");
+                option.value = d.id;
+                option.textContent = d.nome;
+                selectDentista.appendChild(option);
+              });
+
+              // Atualiza o local do dentista selecionado
+              const dentistaSelecionado = dentistas[0];
+              campoLocal.textContent = dentistaSelecionado.local;
+
+              selectDentista.onchange = () => {
+                const idSelecionado = selectDentista.value;
+                const dentista = dentistas.find(d => d.id == idSelecionado);
+                campoLocal.textContent = dentista.local;
+              };
+
               modal.style.display = "flex";
-            } 
-          }  else {
-            if (modoAtual === "dentista") {
-              // Criar disponibilidade
-              td.classList.add("disponivel");
-              agenda[chave] = "disponivel"; // salva no estado
-              td.textContent = td.dataset.hora;
-              showMessage("Horário disponibilizado!");
             } else {
-              showMessage("Esse horário ainda não foi liberado pelo dentista.");
+              // Aviso se horário não foi liberado
+              showMessage("Aviso", "Esse horário ainda não foi liberado pelo dentista.", "aviso");
             }
+          } else if (modoAtual === "dentista") {
+            // Dentista cria disponibilidade em qualquer célula
+            td.classList.add("disponivel");
+            agenda[chaveBase] = "disponivel";
+            td.textContent = td.dataset.hora;
+            showMessage("Sucesso", "Horário disponibilizado!", "sucesso");
           }
         });
 
@@ -125,58 +147,65 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("dataEscolhida").addEventListener("change", (e) => {
-  const dataEscolhida = new Date(e.target.value);
-  currentMonday = getMonday(dataEscolhida);
-  gerarTabela(currentMonday);
-});
-
+    const dataEscolhida = new Date(e.target.value);
+    currentMonday = getMonday(dataEscolhida);
+    gerarTabela(currentMonday);
+  });
 
   // Modal (responsável)
   btnFechar.addEventListener("click", () => modal.style.display = "none");
   btnCancelar.addEventListener("click", () => modal.style.display = "none");
   btnConfirmar.addEventListener("click", () => {
     if (slotSelecionado) {
+      const dentistaId = selectDentista.value;
+      const dentista = dentistas.find(d => d.id == dentistaId);
+
       slotSelecionado.classList.remove("disponivel");
       slotSelecionado.classList.add("ocupado");
 
-      const chave = `${slotSelecionado.dataset.data}-${slotSelecionado.dataset.hora}`;
-      agenda[chave] = "ocupado"; // salva no estado
+      const chave = `${slotSelecionado.dataset.data}-${slotSelecionado.dataset.hora}-${dentistaId}`;
+      agenda[chave] = {
+        dentista: dentista.nome,
+        local: dentista.local
+      };
 
       modal.style.display = "none";
-      showMessage("Consulta confirmada!");
+      showMessage("Sucesso", `Consulta confirmada com ${dentista.nome} em ${dentista.local}!`, "sucesso");
     }
   });
+
+  // Função de mensagem
   function showMessage(titulo, texto, tipo = "aviso") {
-  const modal = document.getElementById("messageModal");
-  const title = document.getElementById("messageTitle");
-  const text = document.getElementById("messageText");
+    const modalMsg = document.getElementById("messageModal");
+    const title = document.getElementById("messageTitle");
+    const text = document.getElementById("messageText");
 
-  // aplica título e texto
-  title.textContent = titulo;
-  text.textContent = texto;
+    title.textContent = titulo;
+    text.textContent = texto;
 
-  // remove classes antigas e adiciona a nova
-  modal.classList.remove("sucesso", "erro", "aviso");
-  modal.classList.add(tipo);
+    modalMsg.classList.remove("sucesso", "erro", "aviso");
+    modalMsg.classList.add(tipo);
 
-  modal.style.display = "flex";
+    modalMsg.style.display = "flex";
 
-  // botão fechar e ok
-  modal.querySelector(".close").onclick = () => modal.style.display = "none";
-  modal.querySelector(".ok").onclick = () => modal.style.display = "none";
+    modalMsg.querySelector(".close").onclick = () => modalMsg.style.display = "none";
+    modalMsg.querySelector(".ok").onclick = () => modalMsg.style.display = "none";
 
-  // fechar clicando fora
-  window.onclick = (event) => {
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  };
-}
-
+    window.onclick = (event) => {
+      if (event.target == modalMsg) {
+        modalMsg.style.display = "none";
+      }
+    };
+  }
 
   // Primeira renderização
   gerarTabela(currentMonday);
 });
+
+
+
+
+
 
 
 

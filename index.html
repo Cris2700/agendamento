@@ -59,24 +59,32 @@
         </tr>
       </thead>
       <tbody>
-        <!-- O JS vai preencher automaticamente de 08:00 até 18:00 -->
+        <!-- O JS vai preencher de 08:00 até 18:00 -->
       </tbody>
     </table>
   </main>
 
   <!-- Modal -->
   <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3>Confirmar Agendamento</h3>
-      <p><strong>Dentista:</strong> <span id="modal-dentista"></span></p>
-      <p><strong>Local:</strong> <span id="modal-local"></span></p>
-      <p><strong>Data:</strong> <span id="modal-data"></span></p>
-      <p><strong>Hora:</strong> <span id="modal-hora"></span></p>
-      <button class="btn confirmar">Confirmar</button>
-      <button class="btn cancelar">Cancelar</button>
-    </div>
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Confirmar Agendamento</h3>
+
+    <p><strong>Data:</strong> <span id="modal-data"></span></p>
+    <p><strong>Hora:</strong> <span id="modal-hora"></span></p>
+
+    <label for="dentistaSelect"><strong>Dentista:</strong></label>
+    <select id="dentistaSelect">
+      <!-- JS vai preencher com as opções -->
+    </select>
+
+    <p><strong>Local:</strong> <span id="modal-local"></span></p>
+
+    <button class="btn confirmar">Confirmar</button>
+    <button class="btn cancelar">Cancelar</button>
   </div>
+</div>
+
   
   <div id="messageModal" class="modal">
     <div class="modal-content">
