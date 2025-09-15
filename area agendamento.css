@@ -1,0 +1,85 @@
+body{
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+}
+.navbar {
+  background: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 20px 70px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.navbar .logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.navbar .nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar .nav-links li a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+
+.navbar .nav-links li a:hover {
+  color: #aaa;
+}
+.card_Saudacoes{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.card_Saudacoes h2{
+  margin-top: 50px;
+}
+.card_Opcoes{
+    display: flex;
+    justify-content: center;
+    gap: 70px;
+    margin-top: 10px;
+    align-items: center;
+    text-align: center;
+}
+.card{
+    width: 250px;
+    height: 200px;
+    background: #ffffff;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(2, 62, 192, 0.315);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 10px;
+}
+button{
+    margin-top: 10px;
+    background-color: #3305ff;
+    border: none;
+    width: 80px;
+    height: 40px;
+    border-radius: 5px;
+    color: #f0f2f5;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    
+}
+button:hover{
+    background-color: #2202b1;
+    transform: translateY(-5px);
+}

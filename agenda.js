@@ -4,15 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnPrev = document.getElementById("prevWeek");
   const btnNext = document.getElementById("nextWeek");
 
-  // Modal (só para responsável)
+  // Modal de agendamento (responsável) - assume que existem esses elementos no HTML
   const modal = document.getElementById("modal");
   const btnFechar = document.querySelector(".close");
   const btnConfirmar = document.querySelector(".confirmar");
   const btnCancelar = document.querySelector(".cancelar");
+  const campoDentista = document.getElementById("modal-dentista");
+  const campoLocal = document.getElementById("modal-local");
   const campoData = document.getElementById("modal-data");
   const campoHora = document.getElementById("modal-hora");
-  const selectDentista = document.getElementById("dentistaSelect");
-  const campoLocal = document.getElementById("modal-local");
+  const selectDentista = document.getElementById("dentistaSelect"); // dropdown do modal
 
   let slotSelecionado = null;
 
@@ -20,11 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let modoAtual = "responsavel"; // padrão
   document.getElementById("modoResponsavel").addEventListener("click", () => {
     modoAtual = "responsavel";
-    alert("Agora você está no modo RESPONSÁVEL");
+    showMessage("Modo alterado", "Agora você está no modo RESPONSÁVEL", "aviso");
   });
   document.getElementById("modoDentista").addEventListener("click", () => {
     modoAtual = "dentista";
-    alert("Agora você está no modo DENTISTA");
+    showMessage("Modo alterado", "Agora você está no modo DENTISTA", "aviso");
   });
 
   // Lista de dentistas (simulação)
@@ -34,13 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: 3, nome: "Dr. Pedro", local: "Clínica ASBI - Norte" }
   ];
 
-  // Objeto para guardar os horários
+  // ESTADO: sempre usar chave base "dd/mm/aaaa-hh:00" e objeto como valor:
+  // agenda[chave] = { status: 'disponivel' } ou { status: 'ocupado', dentista, local }
   let agenda = {};
 
-  // Data inicial = hoje
+  // Data inicial = hoje (ajusta pra segunda)
   let currentMonday = getMonday(new Date());
 
-  // Função: achar segunda-feira
   function getMonday(d) {
     const date = new Date(d);
     const day = date.getDay();
@@ -48,7 +49,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return new Date(date.setDate(diff));
   }
 
-  // Gerar a tabela da semana
+  // Renderiza célula conforme estado
+  function aplicarEstadoNaCelula(td, estado) {
+    td.classList.remove("disponivel", "ocupado");
+    td.textContent = ""; // por padrão vazio, depois setamos conteúdo
+    if (!estado) {
+      // célula sem estado - mostra vazia (ou hora se preferir)
+      td.textContent = ""; // deixa em branco para demonstrar "não liberado"
+      return;
+    }
+    if (estado.status === "disponivel") {
+      td.classList.add("disponivel");
+      td.textContent = td.dataset.hora;
+    } else if (estado.status === "ocupado") {
+      td.classList.add("ocupado");
+      // mostra hora + nome do dentista pra ficar claro
+      td.textContent = `${td.dataset.hora} — ${estado.dentista || ""}`;
+    }
+  }
+
+  // Gera a tabela
   function gerarTabela(monday) {
     tabela.innerHTML = "";
 
@@ -59,15 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
       dias.push(d);
     }
 
-    // Atualiza título com dia/mês/ano
     const options = { day: "2-digit", month: "2-digit", year: "numeric" };
     semanaTitulo.textContent =
       `Semana ${dias[0].toLocaleDateString("pt-BR", options)} até ${dias[6].toLocaleDateString("pt-BR", options)}`;
 
-    // Horários 08:00 → 18:00
     for (let hora = 8; hora <= 18; hora++) {
       const tr = document.createElement("tr");
-
       const th = document.createElement("th");
       th.textContent = `${hora.toString().padStart(2, "0")}:00`;
       tr.appendChild(th);
@@ -75,57 +92,71 @@ document.addEventListener("DOMContentLoaded", () => {
       dias.forEach((dia) => {
         const td = document.createElement("td");
 
-        // Dados do slot
         td.dataset.data = dia.toLocaleDateString("pt-BR");
         td.dataset.hora = `${hora}:00`;
+        // chave base (sempre esta)
+        const chave = `${td.dataset.data}-${td.dataset.hora}`;
 
-        const chaveBase = td.dataset.data + "-" + td.dataset.hora;
+        // estado atual para essa célula (pode ser undefined)
+        const estado = agenda[chave];
 
-        // Se já tiver status no agenda, aplica classe
-        if (agenda[chaveBase]) {
-          td.classList.add("disponivel");
-          td.textContent = td.dataset.hora;
-        }
+        // aplica estado visual
+        aplicarEstadoNaCelula(td, estado);
 
-        // Clique em cada célula
+        // Clique na célula
         td.addEventListener("click", () => {
+          // MODO RESPONSÁVEL: só abre modal se estiver disponível
           if (modoAtual === "responsavel") {
-            if (td.classList.contains("disponivel")) {
-              // Modal abre apenas se o horário estiver liberado
+            if (estado && estado.status === "disponivel") {
               slotSelecionado = td;
               campoData.textContent = td.dataset.data;
               campoHora.textContent = td.dataset.hora;
 
-              // Popula dropdown com dentistas disponíveis
-              selectDentista.innerHTML = "";
-              dentistas.forEach(d => {
-                const option = document.createElement("option");
-                option.value = d.id;
-                option.textContent = d.nome;
-                selectDentista.appendChild(option);
-              });
+              // popula dropdown de dentistas
+              if (selectDentista) {
+                selectDentista.innerHTML = "";
+                dentistas.forEach(d => {
+                  const opt = document.createElement("option");
+                  opt.value = d.id;
+                  opt.textContent = `${d.nome} — ${d.local}`;
+                  selectDentista.appendChild(opt);
+                });
+              }
 
-              // Atualiza o local do dentista selecionado
-              const dentistaSelecionado = dentistas[0];
-              campoLocal.textContent = dentistaSelecionado.local;
-
-              selectDentista.onchange = () => {
-                const idSelecionado = selectDentista.value;
-                const dentista = dentistas.find(d => d.id == idSelecionado);
-                campoLocal.textContent = dentista.local;
-              };
-
+              // mostra modal
               modal.style.display = "flex";
+               } else if (estado && estado.status === "ocupado") {
+    
+     showMessage(
+      "Horário ocupado",
+      `Este horário já foi marcado com ${estado.dentista} em ${estado.local}.`,
+      "aviso"
+    );
             } else {
-              // Aviso se horário não foi liberado
               showMessage("Aviso", "Esse horário ainda não foi liberado pelo dentista.", "aviso");
             }
-          } else if (modoAtual === "dentista") {
-            // Dentista cria disponibilidade em qualquer célula
-            td.classList.add("disponivel");
-            agenda[chaveBase] = "disponivel";
-            td.textContent = td.dataset.hora;
-            showMessage("Sucesso", "Horário disponibilizado!", "sucesso");
+            return;
+          }
+
+          // MODO DENTISTA: pode criar disponibilidade, ou confirmar remoção se já disponivel
+          if (modoAtual === "dentista") {
+            if (estado && estado.status === "disponivel") {
+              // já disponível → pedir confirmação para remover
+              showConfirm("Remover horário", "Deseja realmente remover este horário disponível?", () => {
+                delete agenda[chave];
+                gerarTabela(currentMonday); // re-render para manter DOM x estado sincronizados
+                showMessage("Sucesso", "Horário removido com sucesso.", "sucesso");
+              });
+            } else if (estado && estado.status === "ocupado") {
+              // horário já agendado — não pode ser mexido pelo dentista aqui
+              showMessage("Indisponível", "Este horário já foi agendado por um responsável.", "aviso");
+            } else {
+              // célula vazia → criar disponibilidade
+              agenda[chave] = { status: "disponivel" };
+              gerarTabela(currentMonday); // re-render para aplicar classe
+              showMessage("Sucesso", "Horário disponibilizado!", "sucesso");
+            }
+            return;
           }
         });
 
@@ -136,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Botões de navegação
+  // navegação semanas
   btnPrev.addEventListener("click", () => {
     currentMonday.setDate(currentMonday.getDate() - 7);
     gerarTabela(currentMonday);
@@ -146,61 +177,111 @@ document.addEventListener("DOMContentLoaded", () => {
     gerarTabela(currentMonday);
   });
 
-  document.getElementById("dataEscolhida").addEventListener("change", (e) => {
-    const dataEscolhida = new Date(e.target.value);
-    currentMonday = getMonday(dataEscolhida);
-    gerarTabela(currentMonday);
-  });
+  // seleção por data
+  const inputData = document.getElementById("dataEscolhida");
+  if (inputData) {
+    inputData.addEventListener("change", (e) => {
+      const dataEscolhida = new Date(e.target.value);
+      currentMonday = getMonday(dataEscolhida);
+      gerarTabela(currentMonday);
+    });
+  }
 
-  // Modal (responsável)
-  btnFechar.addEventListener("click", () => modal.style.display = "none");
-  btnCancelar.addEventListener("click", () => modal.style.display = "none");
-  btnConfirmar.addEventListener("click", () => {
-    if (slotSelecionado) {
-      const dentistaId = selectDentista.value;
-      const dentista = dentistas.find(d => d.id == dentistaId);
+  // handlers do modal de agendamento (responsável)
+  if (btnFechar) btnFechar.addEventListener("click", () => modal.style.display = "none");
+  if (btnCancelar) btnCancelar.addEventListener("click", () => modal.style.display = "none");
 
-      slotSelecionado.classList.remove("disponivel");
-      slotSelecionado.classList.add("ocupado");
+  if (btnConfirmar) {
+    btnConfirmar.addEventListener("click", () => {
+      if (!slotSelecionado) return showMessage("Erro", "Nenhum horário selecionado.", "erro");
 
-      const chave = `${slotSelecionado.dataset.data}-${slotSelecionado.dataset.hora}-${dentistaId}`;
+      // pega dentista escolhido no dropdown
+      let dentistaObj = null;
+      if (selectDentista) {
+        const id = selectDentista.value;
+        dentistaObj = dentistas.find(d => String(d.id) === String(id));
+      }
+      // se não tiver dropdown, assume dentista default (padrão)
+      if (!dentistaObj) dentistaObj = { nome: slotSelecionado.dataset.dentista || "Dentista", local: slotSelecionado.dataset.local || "Local" };
+
+      const chave = `${slotSelecionado.dataset.data}-${slotSelecionado.dataset.hora}`;
+
+      // marca como ocupado com info do dentista
       agenda[chave] = {
-        dentista: dentista.nome,
-        local: dentista.local
+        status: "ocupado",
+        dentista: dentistaObj.nome,
+        local: dentistaObj.local
       };
 
       modal.style.display = "none";
-      showMessage("Sucesso", `Consulta confirmada com ${dentista.nome} em ${dentista.local}!`, "sucesso");
-    }
-  });
+      gerarTabela(currentMonday); // re-render para mostrar ocupado
+      showMessage("Sucesso", `Consulta confirmada com ${dentistaObj.nome} em ${dentistaObj.local}!`, "sucesso");
+    });
+  }
 
-  // Função de mensagem
+  // Função de mensagens (messageModal precisa existir no HTML)
   function showMessage(titulo, texto, tipo = "aviso") {
     const modalMsg = document.getElementById("messageModal");
     const title = document.getElementById("messageTitle");
     const text = document.getElementById("messageText");
-
+    if (!modalMsg || !title || !text) {
+      // fallback simples se modal não existir
+      console.log(titulo, texto);
+      return;
+    }
     title.textContent = titulo;
     text.textContent = texto;
 
     modalMsg.classList.remove("sucesso", "erro", "aviso");
     modalMsg.classList.add(tipo);
-
     modalMsg.style.display = "flex";
 
     modalMsg.querySelector(".close").onclick = () => modalMsg.style.display = "none";
-    modalMsg.querySelector(".ok").onclick = () => modalMsg.style.display = "none";
+    const okBtn = modalMsg.querySelector(".ok");
+    if (okBtn) okBtn.onclick = () => modalMsg.style.display = "none";
 
     window.onclick = (event) => {
-      if (event.target == modalMsg) {
-        modalMsg.style.display = "none";
-      }
+      if (event.target == modalMsg) modalMsg.style.display = "none";
     };
   }
 
-  // Primeira renderização
+  // Função de confirmação estilizada (confirmModal precisa existir no HTML)
+  function showConfirm(titulo, texto, onConfirm) {
+    const modalConfirm = document.getElementById("confirmModal");
+    const title = document.getElementById("confirmTitle");
+    const text = document.getElementById("confirmText");
+    if (!modalConfirm || !title || !text) {
+      // fallback para prompt se modal não existir
+      if (confirm(texto)) { if (onConfirm) onConfirm(); }
+      return;
+    }
+
+    title.textContent = titulo;
+    text.textContent = texto;
+    modalConfirm.style.display = "flex";
+
+    const btnConf = modalConfirm.querySelector(".confirmar");
+    const btnCanc = modalConfirm.querySelector(".cancelar");
+    const btnClose = modalConfirm.querySelector(".close");
+
+    // limpa listeners anteriores (substitui)
+    btnConf.onclick = () => {
+      modalConfirm.style.display = "none";
+      if (onConfirm) onConfirm();
+    };
+    btnCanc.onclick = () => modalConfirm.style.display = "none";
+    btnClose.onclick = () => modalConfirm.style.display = "none";
+
+    window.onclick = (event) => {
+      if (event.target == modalConfirm) modalConfirm.style.display = "none";
+    };
+  }
+
+  // primeira renderização
   gerarTabela(currentMonday);
 });
+
+
 
 
 

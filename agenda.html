@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+    <h1>Agenda ASBI</h1>
+  <div class="switch-user">
+    <button id="modoResponsavel">Responsável</button>
+    <button id="modoDentista">Dentista</button>
+  </div>
+  </header>
+
+  <main>
+    <!-- Controles da semana -->
+     <div class="data-selector">
+    <label for="dataEscolhida">Escolher data:</label>
+    <input type="date" id="dataEscolhida">
+  </div>
+    <div class="semana-controles">
+      <button id="prevWeek">⬅️</button>
+      <h2 id="semanaTitulo">Semana atuak</h2>
+      <button id="nextWeek">➡️</button>
+    </div>
+     
+
+    
+    <section id="formDentista" style="display: none; margin: 20px;">
+    <h2>Liberar horários (Dentista)</h2>
+    <label for="dataDentista">Data:</label>
+    <input type="date" id="dataDentista">
+
+    <label for="horaInicio">De:</label>
+    <input type="time" id="horaInicio" value="08:00">
+
+    <label for="horaFim">Até:</label>
+    <input type="time" id="horaFim" value="12:00">
+
+    <button id="btnLiberar">Liberar Horário</button>
+  </section>
+ 
+
+    <!-- Tabela de horários -->
+    <table id="tabela-agenda">
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Segunda</th>
+          <th>Terça</th>
+          <th>Quarta</th>
+          <th>Quinta</th>
+          <th>Sexta</th>
+          <th>Sábado</th>
+          <th>Domingo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- O JS vai preencher de 08:00 até 18:00 -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Confirmar Agendamento</h3>
+
+    <p><strong>Data:</strong> <span id="modal-data"></span></p>
+    <p><strong>Hora:</strong> <span id="modal-hora"></span></p>
+
+    <label for="dentistaSelect"><strong>Dentista:</strong></label>
+    <select id="dentistaSelect">
+      <!-- JS vai preencher com as opções -->
+    </select>
+
+    <p><strong>Local:</strong> <span id="modal-local"></span></p>
+
+    <button class="btn confirmar">Confirmar</button>
+    <button class="btn cancelar">Cancelar</button>
+  </div>
+</div>
+
+  
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="messageTitle"></h3>
+      <p id="messageText"></p>
+      <button class="btn ok">OK</button>
+    </div>
+  </div>
+  
+  <div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2 id="confirmTitle">Confirmar ação</h2>
+    <p id="confirmText">Deseja realmente remover este horário disponível?</p>
+    <div class="buttons">
+      <button class="confirmar">Sim</button>
+      <button class="cancelar">Não</button>
+    </div>
+  </div>
+</div>
+
+<div id="messageModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3 id="messageTitle" class="messageTitle"></h3>
+    <p id="messageText" class="messageText"></p>
+    <button class="btn ok">OK</button>
+  </div>
+</div>
+
+
+  <script src="agenda.js"></script>
+</body>
+</html>
+
