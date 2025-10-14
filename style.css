@@ -110,6 +110,7 @@ header {
   background: rgba(0,0,0,0.5); 
   justify-content: center;
   align-items: center;
+  
 }
 
 .modal-content {
@@ -229,6 +230,20 @@ header {
   box-shadow: 0 0 5px rgba(0, 64, 128, 0.5);
 }
 
+.finalizar {
+  background-color: #c8f7c5 !important; /* verde claro */
+  color: #064b00;
+  
+}
+.finalizar:hover {
+  background-color: #a9ef9f !important;
+}
 
 
+
+.consulta-feita {
+  background-color: #4bffe1;
+  color: #161616;
+  
+}
 

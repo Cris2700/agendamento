@@ -1,289 +1,387 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const tabela = document.getElementById("tabela-agenda").querySelector("tbody");
-  const semanaTitulo = document.getElementById("semanaTitulo");
-  const btnPrev = document.getElementById("prevWeek");
-  const btnNext = document.getElementById("nextWeek");
+$(document).ready(function () {
+  let dataAtual = new Date();
+  let horarioSelecionado = null;
+  let userType = null;
+  let userId = null;
+  let horariosGlobais = [];
 
-  // Modal de agendamento (responsável) - assume que existem esses elementos no HTML
-  const modal = document.getElementById("modal");
-  const btnFechar = document.querySelector(".close");
-  const btnConfirmar = document.querySelector(".confirmar");
-  const btnCancelar = document.querySelector(".cancelar");
-  const campoDentista = document.getElementById("modal-dentista");
-  const campoLocal = document.getElementById("modal-local");
-  const campoData = document.getElementById("modal-data");
-  const campoHora = document.getElementById("modal-hora");
-  const selectDentista = document.getElementById("dentistaSelect"); // dropdown do modal
+  // ====================
+  // Utilitários de modal
+  // ====================
+  function showModal($el) {
+    $el.css({ display: "flex", opacity: 0 }).animate({ opacity: 1 }, 180);
+  }
 
-  let slotSelecionado = null;
+  function hideModals() {
+    $(".modal").not("#messageModal").animate({ opacity: 0 }, 160, function () {
+      $(this).css("display", "none");
+    });
+  }
 
-  // ---- Simulação de papéis ----
-  let modoAtual = "responsavel"; // padrão
-  document.getElementById("modoResponsavel").addEventListener("click", () => {
-    modoAtual = "responsavel";
-    showMessage("Modo alterado", "Agora você está no modo RESPONSÁVEL", "aviso");
-  });
-  document.getElementById("modoDentista").addEventListener("click", () => {
-    modoAtual = "dentista";
-    showMessage("Modo alterado", "Agora você está no modo DENTISTA", "aviso");
-  });
+  // ====================
+  // Funções auxiliares
+  // ====================
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
 
-  // Lista de dentistas (simulação)
-  const dentistas = [
-    { id: 1, nome: "Dr. João", local: "Clínica ASBI - Centro" },
-    { id: 2, nome: "Dra. Maria", local: "Clínica ASBI - Sul" },
-    { id: 3, nome: "Dr. Pedro", local: "Clínica ASBI - Norte" }
-  ];
+  function formatarDataBR(dataISO) {
+    if (!dataISO) return "";
+    const d = new Date(dataISO);
+    const dia = String(d.getDate()).padStart(2, "0");
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const ano = d.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
 
-  // ESTADO: sempre usar chave base "dd/mm/aaaa-hh:00" e objeto como valor:
-  // agenda[chave] = { status: 'disponivel' } ou { status: 'ocupado', dentista, local }
-  let agenda = {};
-
-  // Data inicial = hoje (ajusta pra segunda)
-  let currentMonday = getMonday(new Date());
+  function formatarHora(hora) {
+    if (!hora) return "";
+    return hora.slice(0, 5);
+  }
 
   function getMonday(d) {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(date.setDate(diff));
+    d = new Date(d);
+    let day = d.getDay(),
+      diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
   }
 
-  // Renderiza célula conforme estado
-  function aplicarEstadoNaCelula(td, estado) {
-    td.classList.remove("disponivel", "ocupado");
-    td.textContent = ""; // por padrão vazio, depois setamos conteúdo
-    if (!estado) {
-      // célula sem estado - mostra vazia (ou hora se preferir)
-      td.textContent = ""; // deixa em branco para demonstrar "não liberado"
-      return;
-    }
-    if (estado.status === "disponivel") {
-      td.classList.add("disponivel");
-      td.textContent = td.dataset.hora;
-    } else if (estado.status === "ocupado") {
-      td.classList.add("ocupado");
-      // mostra hora + nome do dentista pra ficar claro
-      td.textContent = `${td.dataset.hora} — ${estado.dentista || ""}`;
-    }
-  }
+  // ====================
+  // Carregar semana
+  // ====================
+  function carregarSemana(dataBase) {
+    let segunda = getMonday(dataBase);
+    let domingo = new Date(segunda);
+    domingo.setDate(domingo.getDate() + 6);
 
-  // Gera a tabela
-  function gerarTabela(monday) {
-    tabela.innerHTML = "";
-
-    const dias = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      dias.push(d);
-    }
-
-    const options = { day: "2-digit", month: "2-digit", year: "numeric" };
-    semanaTitulo.textContent =
-      `Semana ${dias[0].toLocaleDateString("pt-BR", options)} até ${dias[6].toLocaleDateString("pt-BR", options)}`;
-
-    for (let hora = 8; hora <= 18; hora++) {
-      const tr = document.createElement("tr");
-      const th = document.createElement("th");
-      th.textContent = `${hora.toString().padStart(2, "0")}:00`;
-      tr.appendChild(th);
-
-      dias.forEach((dia) => {
-        const td = document.createElement("td");
-
-        td.dataset.data = dia.toLocaleDateString("pt-BR");
-        td.dataset.hora = `${hora}:00`;
-        // chave base (sempre esta)
-        const chave = `${td.dataset.data}-${td.dataset.hora}`;
-
-        // estado atual para essa célula (pode ser undefined)
-        const estado = agenda[chave];
-
-        // aplica estado visual
-        aplicarEstadoNaCelula(td, estado);
-
-        // Clique na célula
-        td.addEventListener("click", () => {
-          // MODO RESPONSÁVEL: só abre modal se estiver disponível
-          if (modoAtual === "responsavel") {
-            if (estado && estado.status === "disponivel") {
-              slotSelecionado = td;
-              campoData.textContent = td.dataset.data;
-              campoHora.textContent = td.dataset.hora;
-
-              // popula dropdown de dentistas
-              if (selectDentista) {
-                selectDentista.innerHTML = "";
-                dentistas.forEach(d => {
-                  const opt = document.createElement("option");
-                  opt.value = d.id;
-                  opt.textContent = `${d.nome} — ${d.local}`;
-                  selectDentista.appendChild(opt);
-                });
-              }
-
-              // mostra modal
-              modal.style.display = "flex";
-               } else if (estado && estado.status === "ocupado") {
-    
-     showMessage(
-      "Horário ocupado",
-      `Este horário já foi marcado com ${estado.dentista} em ${estado.local}.`,
-      "aviso"
+    $("#semanaTitulo").text(
+      `Semana de ${formatarDataBR(segunda)} a ${formatarDataBR(domingo)}`
     );
-            } else {
-              showMessage("Aviso", "Esse horário ainda não foi liberado pelo dentista.", "aviso");
-            }
-            return;
-          }
 
-          // MODO DENTISTA: pode criar disponibilidade, ou confirmar remoção se já disponivel
-          if (modoAtual === "dentista") {
-            if (estado && estado.status === "disponivel") {
-              // já disponível → pedir confirmação para remover
-              showConfirm("Remover horário", "Deseja realmente remover este horário disponível?", () => {
-                delete agenda[chave];
-                gerarTabela(currentMonday); // re-render para manter DOM x estado sincronizados
-                showMessage("Sucesso", "Horário removido com sucesso.", "sucesso");
-              });
-            } else if (estado && estado.status === "ocupado") {
-              // horário já agendado — não pode ser mexido pelo dentista aqui
-              showMessage("Indisponível", "Este horário já foi agendado por um responsável.", "aviso");
-            } else {
-              // célula vazia → criar disponibilidade
-              agenda[chave] = { status: "disponivel" };
-              gerarTabela(currentMonday); // re-render para aplicar classe
-              showMessage("Sucesso", "Horário disponibilizado!", "sucesso");
-            }
-            return;
-          }
-        });
-
-        tr.appendChild(td);
+    $.ajax({
+      url: "get_horarios.php",
+      method: "GET",
+      data: { inicio: formatDate(segunda), fim: formatDate(domingo) },
+      dataType: "json",
+    })
+      .done(function (dados) {
+        horariosGlobais = dados;
+        montarTabela(segunda, dados);
+      })
+      .fail(function (xhr) {
+        console.error("Erro get_horarios.php:", xhr.status, xhr.responseText);
+        alert("Erro ao carregar horários. Veja console (Network).");
       });
-
-      tabela.appendChild(tr);
-    }
   }
 
-  // navegação semanas
-  btnPrev.addEventListener("click", () => {
-    currentMonday.setDate(currentMonday.getDate() - 7);
-    gerarTabela(currentMonday);
-  });
-  btnNext.addEventListener("click", () => {
-    currentMonday.setDate(currentMonday.getDate() + 7);
-    gerarTabela(currentMonday);
-  });
+  // ====================
+  // Montar tabela
+  // ====================
+  function montarTabela(segunda, horarios) {
+    let tbody = $("#tabela-agenda tbody");
+    tbody.empty();
 
-  // seleção por data
-  const inputData = document.getElementById("dataEscolhida");
-  if (inputData) {
-    inputData.addEventListener("change", (e) => {
-      const dataEscolhida = new Date(e.target.value);
-      currentMonday = getMonday(dataEscolhida);
-      gerarTabela(currentMonday);
-    });
-  }
+    for (let h = 8; h <= 18; h++) {
+      let row = $("<tr>");
+      row.append(`<td>${h}:00</td>`);
 
-  // handlers do modal de agendamento (responsável)
-  if (btnFechar) btnFechar.addEventListener("click", () => modal.style.display = "none");
-  if (btnCancelar) btnCancelar.addEventListener("click", () => modal.style.display = "none");
+      for (let i = 0; i < 7; i++) {
+        let dataCelula = new Date(segunda);
+        dataCelula.setDate(segunda.getDate() + i);
+        let dataStr = formatDate(dataCelula);
+        let horaStr = (h < 10 ? "0" : "") + h + ":00:00";
 
-  if (btnConfirmar) {
-    btnConfirmar.addEventListener("click", () => {
-      if (!slotSelecionado) return showMessage("Erro", "Nenhum horário selecionado.", "erro");
+        let horariosCelula = horarios.filter(
+          (hItem) => hItem.data === dataStr && hItem.hora === horaStr
+        );
 
-      // pega dentista escolhido no dropdown
-      let dentistaObj = null;
-      if (selectDentista) {
-        const id = selectDentista.value;
-        dentistaObj = dentistas.find(d => String(d.id) === String(id));
+        let td = $("<td>");
+
+        if (horariosCelula.length > 0) {
+          let ocupadoSlot = horariosCelula.find((x) => x.status === "ocupado");
+          let meuSlotOcupado = horariosCelula.find(
+            (x) => x.dentista_id == userId && x.status === "ocupado"
+          );
+          let meuSlotDisponivel = horariosCelula.find(
+            (x) => x.dentista_id == userId && x.status === "disponivel"
+          );
+          let temDisponivel = horariosCelula.some(
+            (x) => x.status === "disponivel"
+          );
+
+          if (userType === "dentista") {
+            if (meuSlotOcupado) {
+              td.addClass("finalizar")
+                .text("Finalizar")
+                .attr("data-action", "finalizar")
+                .attr("data-horario-id", meuSlotOcupado.id)
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else if (meuSlotDisponivel) {
+              td.addClass("disponivel")
+                .text("Meu horário")
+                .attr("data-action", "desmarcar")
+                .attr("data-horario-id", meuSlotDisponivel.id)
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else if (horariosCelula.length >= 5) {
+              td.addClass("ocupado").text("Indisponível");
+            } else {
+              td.text("-")
+                .attr("data-action", "marcar")
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            }
+          } else {
+            if (ocupadoSlot) {
+              td.addClass("ocupado").text("Agendado");
+            } else if (temDisponivel) {
+              td.addClass("disponivel")
+                .text("Disponível")
+                .attr("data-action", "agendar")
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else {
+              td.text("-");
+            }
+          }
+        } else {
+          if (userType === "dentista") {
+            td.text("-")
+              .attr("data-action", "marcar")
+              .attr("data-date", dataStr)
+              .attr("data-hour", horaStr);
+          } else {
+            td.text("-");
+          }
+        }
+
+        row.append(td);
       }
-      // se não tiver dropdown, assume dentista default (padrão)
-      if (!dentistaObj) dentistaObj = { nome: slotSelecionado.dataset.dentista || "Dentista", local: slotSelecionado.dataset.local || "Local" };
 
-      const chave = `${slotSelecionado.dataset.data}-${slotSelecionado.dataset.hora}`;
+      tbody.append(row);
+    }
+  }
 
-      // marca como ocupado com info do dentista
-      agenda[chave] = {
-        status: "ocupado",
-        dentista: dentistaObj.nome,
-        local: dentistaObj.local
-      };
-
-      modal.style.display = "none";
-      gerarTabela(currentMonday); // re-render para mostrar ocupado
-      showMessage("Sucesso", `Consulta confirmada com ${dentistaObj.nome} em ${dentistaObj.local}!`, "sucesso");
+  // ====================
+  // Modais
+  // ====================
+  function abrirModalAgendamento(data, hora, horariosCelula) {
+    $("#modal-data").text(formatarDataBR(data));
+    $("#modal-hora").text(formatarHora(hora));
+    let select = $("#dentistaSelect");
+    select.empty();
+    horariosCelula.forEach((h) => {
+      select.append(`<option value="${h.id}">${h.dentista}</option>`);
     });
+    horarioSelecionado = { data, hora, horariosCelula };
+    showModal($("#modal"));
   }
 
-  // Função de mensagens (messageModal precisa existir no HTML)
-  function showMessage(titulo, texto, tipo = "aviso") {
-    const modalMsg = document.getElementById("messageModal");
-    const title = document.getElementById("messageTitle");
-    const text = document.getElementById("messageText");
-    if (!modalMsg || !title || !text) {
-      // fallback simples se modal não existir
-      console.log(titulo, texto);
-      return;
-    }
-    title.textContent = titulo;
-    text.textContent = texto;
-
-    modalMsg.classList.remove("sucesso", "erro", "aviso");
-    modalMsg.classList.add(tipo);
-    modalMsg.style.display = "flex";
-
-    modalMsg.querySelector(".close").onclick = () => modalMsg.style.display = "none";
-    const okBtn = modalMsg.querySelector(".ok");
-    if (okBtn) okBtn.onclick = () => modalMsg.style.display = "none";
-
-    window.onclick = (event) => {
-      if (event.target == modalMsg) modalMsg.style.display = "none";
-    };
+  function abrirModalMarcar(data, hora) {
+    horarioSelecionado = { data, hora };
+    $("#confirmTitle").text("Marcar horário");
+    $("#confirmText").text(
+      `Deseja liberar o horário ${formatarHora(hora)} em ${formatarDataBR(data)}?`
+    );
+    showModal($("#confirmModal"));
   }
 
-  // Função de confirmação estilizada (confirmModal precisa existir no HTML)
-  function showConfirm(titulo, texto, onConfirm) {
-    const modalConfirm = document.getElementById("confirmModal");
-    const title = document.getElementById("confirmTitle");
-    const text = document.getElementById("confirmText");
-    if (!modalConfirm || !title || !text) {
-      // fallback para prompt se modal não existir
-      if (confirm(texto)) { if (onConfirm) onConfirm(); }
-      return;
-    }
-
-    title.textContent = titulo;
-    text.textContent = texto;
-    modalConfirm.style.display = "flex";
-
-    const btnConf = modalConfirm.querySelector(".confirmar");
-    const btnCanc = modalConfirm.querySelector(".cancelar");
-    const btnClose = modalConfirm.querySelector(".close");
-
-    // limpa listeners anteriores (substitui)
-    btnConf.onclick = () => {
-      modalConfirm.style.display = "none";
-      if (onConfirm) onConfirm();
-    };
-    btnCanc.onclick = () => modalConfirm.style.display = "none";
-    btnClose.onclick = () => modalConfirm.style.display = "none";
-
-    window.onclick = (event) => {
-      if (event.target == modalConfirm) modalConfirm.style.display = "none";
-    };
+  function abrirModalDesmarcar(id, data, hora) {
+    horarioSelecionado = { id, data, hora };
+    $("#confirmTitle").text("Remover horário");
+    $("#confirmText").text(
+      `Deseja remover o horário ${formatarHora(hora)} em ${formatarDataBR(data)}?`
+    );
+    showModal($("#confirmModal"));
   }
 
-  // primeira renderização
-  gerarTabela(currentMonday);
+  function abrirMensagem(titulo, texto) {
+    $("#messageTitle").text(titulo);
+    $("#messageText").html(texto);
+    showModal($("#messageModal"));
+  }
+ 
+  // ====================
+// Modal Finalizar Consulta
+// ====================
+function abrirModalFinalizar(horario_id, data, hora) {
+  $("#finalizar-data").text(formatarDataBR(data));
+  $("#finalizar-hora").text(formatarHora(hora));
+  $("#procedimento").val("");
+  $("#observacoes").val("");
+  $("#finalizarModal").data("horario-id", horario_id);
+  showModal($("#finalizarModal"));
+}
+
+// Confirma finalização
+$("#finalizarConfirmar").off("click").on("click", function () {
+  const horario_id = $("#finalizarModal").data("horario-id");
+  const procedimento = $("#procedimento").val().trim();
+  const observacoes = $("#observacoes").val().trim();
+
+  $.ajax({
+    url: "finalizar_consulta.php",
+    method: "POST",
+    data: JSON.stringify({ horario_id, procedimento, observacoes }),
+    contentType: "application/json",
+    dataType: "json",
+    success: function (res) {
+      hideModals();
+      abrirMensagem(res.success ? "Sucesso" : "Erro", res.message);
+      if (res.success) carregarSemana(dataAtual);
+    },
+    error: function (xhr) {
+      console.error("Erro finalizar_consulta.php:", xhr.status, xhr.responseText);
+    },
+  });
 });
 
+$("#finalizarCancelar").off("click").on("click", function () {
+  hideModals();
+});
 
+  // ====================
+  // Eventos dos Modais
+  // ====================
+  $(".close, #modal-cancelar, #confirmarNao").off("click").on("click", function () {
+    hideModals();
+  });
 
+  $("#messageModal .ok").off("click").on("click", function (e) {
+    e.stopPropagation();
+    $("#messageModal").animate({ opacity: 0 }, 160, function () {
+      $(this).css("display", "none");
+    });
+  });
 
+  $("#modal-confirmar").on("click", function () {
+    let horario_id = $("#dentistaSelect").val();
+    if (!horario_id) {
+      abrirMensagem("Erro", "Selecione um dentista");
+      return;
+    }
+    $.post(
+      "agendar_horario.php",
+      { horario_id },
+      function (res) {
+        if (res.success) {
+          abrirMensagem("Sucesso", "Horário agendado com sucesso!");
+          carregarSemana(dataAtual);
+        } else {
+          abrirMensagem("Erro", res.message || "Não foi possível agendar.");
+        }
+        hideModals();
+      },
+      "json"
+    );
+  });
+
+  $("#confirmarSim").on("click", function () {
+    if (horarioSelecionado && horarioSelecionado.id) {
+      $.post(
+        "desmarcar_horario.php",
+        { id: horarioSelecionado.id },
+        function (res) {
+          if (res.success) {
+            abrirMensagem("Sucesso", "Horário removido!");
+            carregarSemana(dataAtual);
+          } else {
+            abrirMensagem("Erro", res.message || "Não foi possível remover.");
+          }
+          hideModals();
+        },
+        "json"
+      );
+    } else {
+      $.post(
+        "marcar_horario.php",
+        {
+          data: horarioSelecionado.data,
+          hora: horarioSelecionado.hora,
+        },
+        function (res) {
+          if (res.success) {
+            abrirMensagem(
+              "Sucesso",
+              "Horário liberado! <br> OBS: Não esquecer de finalizar pós consulta."
+            );
+            carregarSemana(dataAtual);
+          } else {
+            abrirMensagem("Erro", res.message || "Não foi possível liberar.");
+          }
+          hideModals();
+        },
+        "json"
+      );
+    }
+  });
+
+  // ====================
+  // Clique nas células
+  // ====================
+  $("#tabela-agenda tbody").off("click", "td[data-action]").on("click", "td[data-action]", function () {
+    const action = $(this).attr("data-action");
+    const horarioId = $(this).data("horario-id");
+    const date = $(this).attr("data-date");
+    const hour = $(this).attr("data-hour");
+
+    const dataHoraClicada = new Date(`${date}T${hour}`);
+    const agora = new Date();
+
+    if (dataHoraClicada < agora) {
+      abrirMensagem("Aviso", "Não é possível marcar ou alterar horários em dias passados.");
+      return;
+    }
+
+    if (action === "finalizar") {
+      abrirModalFinalizar(horarioId, date, hour);
+    } else if (action === "desmarcar") {
+      abrirModalDesmarcar(horarioId, date, hour);
+    } else if (action === "marcar") {
+      abrirModalMarcar(date, hour);
+    } else if (action === "agendar") {
+      const horariosCelula = horariosGlobais.filter(
+        (hItem) => hItem.data === date && hItem.hora === hour
+      );
+      abrirModalAgendamento(date, hour, horariosCelula);
+    }
+  });
+
+  // ====================
+  // Controles da semana
+  // ====================
+  $("#prevWeek").click(function () {
+    dataAtual.setDate(dataAtual.getDate() - 7);
+    carregarSemana(dataAtual);
+  });
+
+  $("#nextWeek").click(function () {
+    dataAtual.setDate(dataAtual.getDate() + 7);
+    carregarSemana(dataAtual);
+  });
+
+  $("#dataEscolhida").change(function () {
+    dataAtual = new Date($(this).val());
+    carregarSemana(dataAtual);
+  });
+
+  // ====================
+  // Checar usuário logado
+  // ====================
+  $.getJSON("get_user.php", function (res) {
+    if (!res.logged) {
+      window.location.href = "login.html";
+    } else {
+      userType = res.type;
+      userId = res.id;
+      console.log("Logado como:", userType, "ID:", userId);
+      carregarSemana(dataAtual);
+    }
+  }).fail(function (xhr) {
+    console.error("Erro get_user.php:", xhr.status, xhr.responseText);
+  });
+});
 
 
 
