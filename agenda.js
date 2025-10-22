@@ -78,94 +78,90 @@ $(document).ready(function () {
   // Montar tabela
   // ====================
  function montarTabela(segunda, horarios) {
-  let tbody = $("#tabela-agenda tbody");
-  tbody.empty();
+    let tbody = $("#tabela-agenda tbody");
+    tbody.empty();
 
-  for (let h = 8; h <= 18; h++) {
-    let row = $("<tr>");
-    row.append(`<td>${h}:00</td>`);
+    for (let h = 8; h <= 18; h++) {
+      let row = $("<tr>");
+      row.append(`<td>${h}:00</td>`);
 
-    for (let i = 0; i < 7; i++) {
-      let dataCelula = new Date(segunda);
-      dataCelula.setDate(segunda.getDate() + i);
-      let dataStr = formatDate(dataCelula);
-      let horaStr = (h < 10 ? "0" : "") + h + ":00:00";
+      for (let i = 0; i < 7; i++) {
+        let dataCelula = new Date(segunda);
+        dataCelula.setDate(segunda.getDate() + i);
+        let dataStr = formatDate(dataCelula);
+        let horaStr = (h < 10 ? "0" : "") + h + ":00:00";
 
-      let horariosCelula = horarios.filter(
-        (hItem) => hItem.data === dataStr && hItem.hora === horaStr
-      );
-
-      let td = $("<td>");
-
-      if (horariosCelula.length > 0) {
-        let ocupadoSlot = horariosCelula.find((x) => x.status === "ocupado");
-        let meuSlotOcupado = horariosCelula.find(
-          (x) => x.dentista_id == userId && x.status === "ocupado"
-        );
-        let meuSlotDisponivel = horariosCelula.find(
-          (x) => x.dentista_id == userId && x.status === "disponivel"
+        let horariosCelula = horarios.filter(
+          (hItem) => hItem.data === dataStr && hItem.hora === horaStr
         );
 
-        // NOVO: próprio usuário que já agendou
-        let meuHorarioUsuario = horariosCelula.find(
-          (x) => x.usuario_id === userId && x.status === "ocupado"
-        );
+        let td = $("<td>");
 
-        let temDisponivel = horariosCelula.some(
-          (x) => x.status === "disponivel"
-        );
+        if (horariosCelula.length > 0) {
+          let ocupadoSlot = horariosCelula.find((x) => x.status === "ocupado");
+          let meuSlotOcupado = horariosCelula.find(
+            (x) => x.dentista_id == userId && x.status === "ocupado"
+          );
+          let meuSlotDisponivel = horariosCelula.find(
+            (x) => x.dentista_id == userId && x.status === "disponivel"
+          );
+          let temDisponivel = horariosCelula.some(
+            (x) => x.status === "disponivel"
+          );
 
-        if (userType === "dentista") {
-          if (meuSlotOcupado) {
-            td.addClass("finalizar")
-              .text("Finalizar")
-              .attr("data-action", "finalizar")
-              .attr("data-horario-id", meuSlotOcupado.id)
-              .attr("data-date", dataStr)
-              .attr("data-hour", horaStr);
-          } else if (meuSlotDisponivel) {
-            td.addClass("disponivel")
-              .text("Meu horário")
-              .attr("data-action", "desmarcar")
-              .attr("data-horario-id", meuSlotDisponivel.id)
-              .attr("data-date", dataStr)
-              .attr("data-hour", horaStr);
-          } else if (horariosCelula.length >= 5) {
-            td.addClass("ocupado").text("Indisponível");
+          if (userType === "dentista") {
+            if (meuSlotOcupado) {
+              td.addClass("finalizar")
+                .text("Finalizar")
+                .attr("data-action", "finalizar")
+                .attr("data-horario-id", meuSlotOcupado.id)
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else if (meuSlotDisponivel) {
+              td.addClass("disponivel")
+                .text("Meu horário")
+                .attr("data-action", "desmarcar")
+                .attr("data-horario-id", meuSlotDisponivel.id)
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else if (horariosCelula.length >= 5) {
+              td.addClass("ocupado").text("Indisponível");
+            } else {
+              td.text("-")
+                .attr("data-action", "marcar")
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            }
           } else {
-            td.text("-");
+            if (ocupadoSlot) {
+              td.addClass("ocupado").text("Agendado");
+            } else if (temDisponivel) {
+              td.addClass("disponivel")
+                .text("Disponível")
+                .attr("data-action", "agendar")
+                .attr("data-date", dataStr)
+                .attr("data-hour", horaStr);
+            } else {
+              td.text("-");
+            }
           }
         } else {
-          // USUÁRIO
-          if (meuHorarioUsuario) {
-            td.addClass("ocupado").text("Agendado"); // não mostra "Disponível" se já agendou
-          } else if (temDisponivel) {
-            td.addClass("disponivel")
-              .text("Disponível")
-              .attr("data-action", "agendar")
+          if (userType === "dentista") {
+            td.text("-")
+              .attr("data-action", "marcar")
               .attr("data-date", dataStr)
               .attr("data-hour", horaStr);
           } else {
             td.text("-");
           }
         }
-      } else {
-        if (userType === "dentista") {
-          td.text("-")
-            .attr("data-action", "marcar")
-            .attr("data-date", dataStr)
-            .attr("data-hour", horaStr);
-        } else {
-          td.text("-");
-        }
+
+        row.append(td);
       }
 
-      row.append(td);
+      tbody.append(row);
     }
-
-    tbody.append(row);
-  }
-}
+  };
 
 
 
@@ -183,7 +179,7 @@ $(document).ready(function () {
 
   
   horariosCelula
-  .filter(h => h.status !== "finalizado") 
+  .filter(h => h.status !== "disponível") 
   .forEach((h) => {
     const titulo = h.nome_completo ? `Dr(a) ${h.nome_completo}` : h.dentista;
     select.append(`<option value="${h.id}" data-dentista-id="${h.dentista_id}">${titulo}</option>`);
