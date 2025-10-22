@@ -21,18 +21,37 @@ $(document).ready(function () {
   // ====================
   // Funções auxiliares
   // ====================
-  function formatDate(date) {
-    return date.toISOString().split("T")[0];
-  }
+  // parse seguro: transforma "YYYY-MM-DD" em Date no horário LOCAL (meia-noite local)
+function parseLocalDate(isoDateStr) {
+  if (!isoDateStr) return null;
+  if (isoDateStr instanceof Date) return new Date(isoDateStr.getFullYear(), isoDateStr.getMonth(), isoDateStr.getDate());
+  // evita passar strings com hora; aceita "YYYY-MM-DD" e "YYYY-MM-DD HH:MM:SS"
+  const dateOnly = isoDateStr.split(' ')[0];
+  const parts = dateOnly.split('-').map(Number);
+  // parts = [YYYY, MM, DD]
+  if (parts.length !== 3 || parts.some(isNaN)) return new Date(isoDateStr); // fallback
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
 
-  function formatarDataBR(dataISO) {
-    if (!dataISO) return "";
-    const d = new Date(dataISO);
-    const dia = String(d.getDate()).padStart(2, "0");
-    const mes = String(d.getMonth() + 1).padStart(2, "0");
-    const ano = d.getFullYear();
-    return `${dia}/${mes}/${ano}`;
-  }
+  function formatDate(date) {
+  // retorna "YYYY-MM-DD" baseado em data LOCAL
+  const d = parseLocalDate(date);
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function formatarDataBR(dataISO) {
+  if (!dataISO) return "";
+  const d = parseLocalDate(dataISO);
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = d.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
+
 
   function formatarHora(hora) {
     if (!hora) return "";
@@ -40,11 +59,14 @@ $(document).ready(function () {
   }
 
   function getMonday(d) {
-    d = new Date(d);
-    let day = d.getDay(),
-      diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-  }
+  const dt = parseLocalDate(d);
+  const day = dt.getDay();
+  const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); // cópia limpa
+  monday.setDate(diff);
+  return monday;
+}
+
 
   // ====================
   // Carregar semana
@@ -86,7 +108,11 @@ $(document).ready(function () {
       row.append(`<td>${h}:00</td>`);
 
       for (let i = 0; i < 7; i++) {
-        let dataCelula = new Date(segunda);
+        // base segura: parseia "segunda" como local (string ou Date)
+        let base = parseLocalDate(segunda);
+        let dataCelula = new Date(base.getFullYear(), base.getMonth(), base.getDate()); 
+        dataCelula.setDate(base.getDate() + i);
+
         dataCelula.setDate(segunda.getDate() + i);
         let dataStr = formatDate(dataCelula);
         let horaStr = (h < 10 ? "0" : "") + h + ":00:00";
@@ -392,9 +418,9 @@ $("#finalizarCancelar").off("click").on("click", function () {
 
     if (dataHoraClicada < agora) {
        if (userType === "dentista") {
-       abrirMensagem("Aviso", "Não é possível marcar ou alterar horários de dias passados.");
+       abrirMensagem("Aviso", "Não é possível marcar ou alterar horários passados.");
     } else {
-      abrirMensagem("Aviso", "Você não pode marcar horários em dias passados.");
+      abrirMensagem("Aviso", "Você não pode marcar horários passados.");
     }
       return;
   }
@@ -427,7 +453,7 @@ $("#finalizarCancelar").off("click").on("click", function () {
   });
 
   $("#dataEscolhida").change(function () {
-    dataAtual = new Date($(this).val());
+    dataAtual = parseLocalDate($(this).val());
     carregarSemana(dataAtual);
   });
 
