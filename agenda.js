@@ -105,6 +105,9 @@ $(document).ready(function () {
           let meuSlotDisponivel = horariosCelula.find(
             (x) => x.dentista_id == userId && x.status === "disponivel"
           );
+          let meuHorarioUsuario = horariosCelula.find(
+          (x) => x.usuario_id === userId && x.status === "ocupado"
+          );
           let temDisponivel = horariosCelula.some(
             (x) => x.status === "disponivel"
           );
@@ -133,7 +136,7 @@ $(document).ready(function () {
                 .attr("data-hour", horaStr);
             }
           } else {
-            if (ocupadoSlot) {
+            if (meuHorarioUsuario) {
               td.addClass("ocupado").text("Agendado");
             } else if (temDisponivel) {
               td.addClass("disponivel")
@@ -179,7 +182,7 @@ $(document).ready(function () {
 
   
   horariosCelula
-  .filter(h => h.status !== "disponível") 
+  .filter(h => h.status === "disponivel") 
   .forEach((h) => {
     const titulo = h.nome_completo ? `Dr(a) ${h.nome_completo}` : h.dentista;
     select.append(`<option value="${h.id}" data-dentista-id="${h.dentista_id}">${titulo}</option>`);
