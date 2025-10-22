@@ -13,7 +13,7 @@
 </head>
 <body>
 <header>
-  <h1>Agenda ASBI</h1>
+  <h1>Agendamento</h1>
   <div class="user-actions">
     <a href="logout.php" id="logoutBtn" class="logout-btn">Logout</a>
   </div>

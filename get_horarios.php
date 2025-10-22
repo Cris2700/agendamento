@@ -12,6 +12,7 @@ $stmt = $pdo->prepare("
         h.status,
         h.dentista_id,
         d.nome_usuario AS dentista,
+        d.nome_completo AS nome_completo,
         h.usuario_id,
         u.nome_usuario AS usuario
     FROM horarios h
