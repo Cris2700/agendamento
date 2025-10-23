@@ -9,7 +9,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda ASBI</title>
-  <link rel="stylesheet" href="agenda1.css">
+  <link rel="stylesheet" href="agenda.css">
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   <script src="https://kit.fontawesome.com/9afa31b3d3.js" crossorigin="anonymous"></script>
 </head>
@@ -17,7 +17,13 @@
 
 
 <main>
-
+<h1 class="sei"><span class="palavra-degrade">Agendamento ASBI</span>
+</h1>
+  <!-- Seleção de data -->
+  <div class="data-selector">
+    <label for="dataEscolhida">Escolher data:</label>
+    <input type="date" id="dataEscolhida">
+  </div>
   
   <!-- Controles da semana -->
   <div class="semana-controles">
@@ -27,11 +33,7 @@
   </div>
 
 
-  <!-- Seleção de data -->
-  <div class="data-selector">
-    <label for="dataEscolhida">Escolher data:</label>
-    <input type="date" id="dataEscolhida">
-  </div>
+  
 
   
   
@@ -118,10 +120,10 @@
 </div> <br>
 <div class="legendas">
   <ul class="descricoes">
-    <li class="items"><h4>"-" Não há horários disponíveis.</h4></li>
-    <li class="items"><h4>"Disponível" Há horários disponíveis para agendamento.</h4></li>
-    <li class="items"><h4>"Agendado" Agendamento marcado.</h4></li>
-    <li class="items"><h4>"Indisponível" Horário está cheio.</h4></li>
+    <li class="items"><h4>"<span class="destacado">-</span>" Não há horários disponíveis.</h4></li>
+    <li class="items"><h4>"<span class="destacado">Disponível</span>" Há horários disponíveis para agendamento.</h4></li>
+    <li class="items"><h4>"<span class="destacado">Agendado</span>" Agendamento marcado.</h4></li>
+    <li class="items"><h4>"<span class="destacado">Indisponível</span>" Horário está cheio.</h4></li>
   </ul>
 </div>
 <script src="agenda.js"></script>
