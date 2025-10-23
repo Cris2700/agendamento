@@ -1,5 +1,6 @@
 <?php 
     include "limpar_horario.php";
+    include "header.php";
 ?>
 
 <!DOCTYPE html>
@@ -8,30 +9,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda ASBI</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="agenda1.css">
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://kit.fontawesome.com/9afa31b3d3.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<header>
-  <h1>Agendamento</h1>
-  <div class="user-actions">
-    <a href="logout.php" id="logoutBtn" class="logout-btn">Logout</a>
-  </div>
-</header>
+
 
 <main>
+
+  
+  <!-- Controles da semana -->
+  <div class="semana-controles">
+    <button id="prevWeek"><i class="fa-solid fa-arrow-left"></i></button>
+    <h2 id="semanaTitulo">Semana atual</h2>
+    <button id="nextWeek"><i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+
+
   <!-- Seleção de data -->
   <div class="data-selector">
     <label for="dataEscolhida">Escolher data:</label>
     <input type="date" id="dataEscolhida">
   </div>
 
-  <!-- Controles da semana -->
-  <div class="semana-controles">
-    <button id="prevWeek">⬅️</button>
-    <h2 id="semanaTitulo">Semana atual</h2>
-    <button id="nextWeek">➡️</button>
-  </div>
+  
+  
 
  
 
@@ -112,9 +115,16 @@
       <button id="finalizarCancelar" class="cancelar">Cancelar</button>
     </div>
   </div>
+</div> <br>
+<div class="legendas">
+  <ul class="descricoes">
+    <li class="items"><h4>"-" Não há horários disponíveis.</h4></li>
+    <li class="items"><h4>"Disponível" Há horários disponíveis para agendamento.</h4></li>
+    <li class="items"><h4>"Agendado" Agendamento marcado.</h4></li>
+    <li class="items"><h4>"Indisponível" Horário está cheio.</h4></li>
+  </ul>
 </div>
-
 <script src="agenda.js"></script>
 </body>
 </html>
-
+<?php include "footer.php" ?>
