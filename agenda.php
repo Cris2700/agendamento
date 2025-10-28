@@ -118,15 +118,16 @@
     </div>
   </div>
 </div> <br>
-<div class="legendas">
-  <ul class="descricoes">
-    <li class="items"><h4>"<span class="destacado">-</span>" Não há horários disponíveis.</h4></li>
+
+<div class="legendas"> 
+  <ul class="descricoes"> 
+    <li class="items"><h3>Legendas:</h3><h4>"<span class="destacado">-</span>" Não há horários disponíveis.</h4></li>
     <li class="items"><h4>"<span class="destacado">Disponível</span>" Há horários disponíveis para agendamento.</h4></li>
     <li class="items"><h4>"<span class="destacado">Agendado</span>" Agendamento marcado.</h4></li>
     <li class="items"><h4>"<span class="destacado">Indisponível</span>" Horário está cheio.</h4></li>
   </ul>
 </div>
-<script src="agenda.js"></script>
+<script src="agendaa.js"></script>
 </body>
 </html>
 <?php include "footer.php" ?>

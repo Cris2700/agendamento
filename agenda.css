@@ -90,7 +90,7 @@ body {
 }
 
 .ocupado {
-  background: #00ff1a; 
+  background: #53ff64; 
   color: #000000;
   cursor: not-allowed;
 }
@@ -255,6 +255,7 @@ main{
  margin-left: 50px;
  color: #3d3d3d;
  font-weight: 100;
+
 }
 ul{
   list-style: none;
