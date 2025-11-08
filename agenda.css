@@ -1,0 +1,274 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body{
+  height: 100%;
+}
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f9ff; 
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.palavra-degrade {
+  background-image: linear-gradient(to right, #2aed37, #00aeff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
+
+
+.semana-controles {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.semana-controles button {
+  background-image: linear-gradient(to right, #2aed37, #00aeff, #ff3ad4);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: ease-in-out 0.7s;
+}
+
+.semana-controles button:hover {
+  background-image: linear-gradient(to right, #2aed3784, #00aeff7a, #ff3ad47e);
+  transition: all 1s;
+}
+
+
+#semanaTitulo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #214160;
+}
+
+/* Tabela */
+#tabela-agenda {
+  width: 95%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+#tabela-agenda th,
+#tabela-agenda td {
+  border: 1px solid #ccc;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+#tabela-agenda th {
+  background-image: linear-gradient(to right, #2aed37, #00aeff, #ff3ad4);
+  color: white;
+}
+
+
+.disponivel {
+  background: #cce5ff; 
+  cursor: pointer;
+}
+
+.disponivel:hover {
+  background: #99ccff; 
+}
+
+.ocupado {
+  background: #53ff64; 
+  color: #000000;
+  cursor: not-allowed;
+}
+
+.indisponivel {
+  background: #ffcccc; 
+  color: #660000;
+  cursor: not-allowed;
+}
+
+#tabela-agenda td {
+  cursor: pointer;
+}
+
+
+
+
+
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5); 
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 350px;
+  max-width: 90%;
+  text-align: center;
+  position: relative;
+}
+
+.modal-content h3 {
+  margin-bottom: 1rem;
+  color: #004080;
+}
+
+.modal-content p {
+  margin: 0.5rem 0;
+}
+
+.messageTitle{
+  margin-bottom: 1rem;
+  color: #004080;
+}
+.messageText{
+  margin: 0.5rem 0;
+}
+#messageModal .modal-content .btn{
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #0066cc;
+  color: white;
+}
+#messageModal .modal-content .btn:hover {
+  background-color: #084a91;
+}
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirmar {
+  background: #0066cc;
+  color: white;
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirmar:hover {
+  background: #004c99;
+}
+
+.cancelar {
+  background: #ccc;
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancelar:hover {
+  background: #999;
+}
+.data-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.data-selector label {
+  font-weight: bold;
+  color: #003366; 
+  font-size: 1rem;
+}
+
+.data-selector input[type="date"] {
+  padding: 8px 12px;
+  border: 2px solid #007BFF;
+  border-radius: 8px;
+  background-color: #f0f8ff; 
+  color: #003366;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.data-selector input[type="date"]:hover {
+  border-color: #0056b3;
+  background-color: #e6f2ff;
+}
+
+.data-selector input[type="date"]:focus {
+  outline: none;
+  border-color: #004080;
+  box-shadow: 0 0 5px rgba(0, 64, 128, 0.5);
+}
+
+.finalizar {
+  background-color: #c8f7c5 !important;
+  color: #064b00;
+  
+}
+.finalizar:hover {
+  background-color: #a9ef9f !important;
+}
+main{
+  flex: 1;
+ }
+.legendas{
+ margin-left: 50px;
+ color: #3d3d3d;
+ font-weight: 100;
+
+}
+ul{
+  list-style: none;
+}
+.legendas .descricoes li:nth-child(1) span{
+  color: #ffcc00;
+}
+.legendas .descricoes li:nth-child(2) span{
+  color: #007abc;
+}
+.legendas .descricoes li:nth-child(3) span{
+  color: #0aff1e;
+}
+.legendas .descricoes li:nth-child(4) span{
+  color: #f00000;
+}
